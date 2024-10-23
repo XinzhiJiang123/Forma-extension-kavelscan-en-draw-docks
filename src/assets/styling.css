@@ -1,5 +1,5 @@
 .selecteer_btn {
-    background-color: #2b5f9f; /* Dark blue background */
+    background-color: #3b6aa3; /* Dark blue background */
     color: white; /* White text */
     padding: 10px 20px; /* Padding for the button */
     border: none; /* Remove default border */
@@ -16,4 +16,60 @@
 
 .selecteer_btn:active {
     background-color: #08203B; /* Even darker blue when clicked */
+}
+
+.selecteer_orange_btn {
+    background-color: #a3523b; /* Dark blue background */
+    color: white; /* White text */
+    padding: 10px 20px; /* Padding for the button */
+    border: none; /* Remove default border */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+    font-size: 16px; /* Font size */
+    font-weight: bold; /* Bold text */
+    transition: background-color 0.3s ease; /* Smooth transition on hover */
+}
+
+.selecteer_orange_btn:hover {
+    background-color: #64230d; /* Darker blue on hover */
+}
+
+.selecteer_orange_btn:active {
+    background-color: #64230d; /* Even darker blue when clicked */
+}
+
+
+.remove_docks_btn {
+    background-color: #f7f7f7; /* Dark blue background */
+    color: rgb(116, 116, 116); /* White text */
+    padding: 8px 16px; /* Padding for the button */
+    border: 2px solid rgb(228, 227, 227); /* Remove default border */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+    font-size: 14px; /* Font size */
+    /* font-weight: bold;  */
+    transition: background-color 0.3s ease; /* Smooth transition on hover */
+}
+
+.remove_docks_btn:hover {
+    background-color: rgb(214, 214, 214); /* Darker blue on hover */
+}
+
+.remove_docks_btn:active {
+    background-color: rgb(214, 214, 214); /* Even darker blue when clicked */
+}
+
+
+.text_showing_info_of_selected {
+    font-size: 16px; /* Font size */
+    color: #5f6c7f;
+    /* font-weight: bold;  */
+    margin-left: 60px; /* Margin at the top */
+    margin-top: 8px;
+}
+.p {
+    font-size: 16px; /* Font size */
+    color: #96a6bc;
+    /* font-weight: bold;  */
+    margin-left: 60px; /* Margin at the top */
 }
