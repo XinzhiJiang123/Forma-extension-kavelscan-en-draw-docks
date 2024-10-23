@@ -1,0 +1,19 @@
+.selecteer_btn {
+    background-color: #2b5f9f; /* Dark blue background */
+    color: white; /* White text */
+    padding: 10px 20px; /* Padding for the button */
+    border: none; /* Remove default border */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+    font-size: 16px; /* Font size */
+    font-weight: bold; /* Bold text */
+    transition: background-color 0.3s ease; /* Smooth transition on hover */
+}
+
+.selecteer_btn:hover {
+    background-color: #0D3564; /* Darker blue on hover */
+}
+
+.selecteer_btn:active {
+    background-color: #08203B; /* Even darker blue when clicked */
+}
