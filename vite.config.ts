@@ -7,5 +7,5 @@ export default defineConfig({
 	// server: {
     //     port: 5173,
     // }
-    base: '/Forma-extension-kavelscan-en-draw-docks/',
+    base: '/',
 });
