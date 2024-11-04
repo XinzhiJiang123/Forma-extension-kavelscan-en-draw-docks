@@ -508,6 +508,24 @@ function App() {
         }
     };
 
+	const handleDownload = () => {
+        const data = {
+            buildingPaths,
+            message: "This is a dummy JSON file containing building paths.",
+        };
+
+        const jsonString = JSON.stringify(data, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'buildingPaths.json';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
 
 
 
@@ -782,6 +800,8 @@ function App() {
 					<p>Kantoor oppervlak: 10000 m2</p>
 					<p>Bebouwingspercentage: 60%</p>
 				</div>
+
+		    		<button onClick={handleDownload}>Download dummy building test</button>
 
 				
 
