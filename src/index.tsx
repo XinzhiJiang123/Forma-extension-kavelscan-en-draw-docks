@@ -69,6 +69,38 @@ function findPointsOnLine_2ndPt(line: { coordinates: [Point, Point] }, spacing: 
     return points;
 }
 
+function calculatePerimeterAndArea(xCoordinates: number[], yCoordinates: number[]) {
+    const n = xCoordinates.length;
+
+    if (n < 3) {
+        throw new Error("A polygon must have at least 3 vertices.");
+    }
+
+    let perimeter = 0;
+    let area = 0;
+
+    // Iterate over each vertex and its next neighbor
+    for (let i = 0; i < n; i++) {
+        const nextIndex = (i + 1) % n; // Next vertex index (wraps around to the first vertex)
+
+        // Coordinates of current and next vertex
+        const x1 = xCoordinates[i], y1 = yCoordinates[i];
+        const x2 = xCoordinates[nextIndex], y2 = yCoordinates[nextIndex];
+
+        // Calculate distance for perimeter
+        const distance = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+        perimeter += distance;
+
+        // Add to the area using Shoelace formula
+        area += x1 * y2 - y1 * x2;
+    }
+
+    // Finalize area calculation
+    area = Math.abs(area) / 2;
+
+    return { perimeter, area };
+}
+
 
 function App() {
     const [buildingPaths, setBuildingPaths] = useState<string[]>([]);
@@ -77,14 +109,30 @@ function App() {
 	const [bouwvlakArea, setBouwvlakArea] = useState<number | null>(null);
 
 	const [minBebouwingspercentage, setMinBebouwingspercentage] = useState<number>(0);
-	const [maxBebouwingspercentage, setMaxBebouwingspercentage] = useState<number>(0.6);
+	const [maxBebouwingspercentage, setMaxBebouwingspercentage] = useState<number>(0.7);
 	const [parkeernormKantoor, setParkeernormKantoor] = useState<number>(2.3);
 	const [parkeernormHal, setParkeernormHal] = useState<number>(0.9);
 	const [oppervlakKantoor, setOppervlakKantoor] = useState<number>(500); 
 	const [aantalBouwlagenKantoor, setaantalBouwlagenKantoor] = useState<number>(2); 
 	const [halFunctie, setHalFunctie] = useState<string>("nvt");
-	const [parkeerplaatsBenodigd, setParkeerplaatsBenodigd] = useState<number>(0);
+	const [parkeerplaatsBenodigd, setParkeerplaatsBenodigd] = useState<number>();
 	const [maxHalOppervlak, setMaxHalOppervlak] = useState<number | null>(null);
+
+
+	// other results in kavelscan results
+	const [bvoTotaal, setBvoTotaal] = useState<number | null>(null);
+	const [bebouwdOpp, setBebouwdOpp] = useState<number | null>(null);
+	const [restOpp, setRestOpp] = useState<number | null>(null);
+	const [bebouwingsgraad, setBebouwingsgraad] = useState<number | null>(null);
+	const [docks, setDocks] = useState<number | null>(null);
+	
+
+	const [geselecteerd_hal, setGeselecteerd_hal] = useState<string>("niks");
+	const [geselecteerd_kan, setGeselecteerd_kan] = useState<string>("niks");
+	const [dockAantalForExport, setDockAantalForExport] = useState<number | null>(10);
+	const [halKanOverlapLength, setHalKanOverlapLength] = useState<number | null>(40);
+	const [halCompartLength, setHalCompartLength] = useState<number | null>(300);
+
 
 	const [isCollapsibleOpen, setIsCollapsibleOpen] = useState<boolean>(false);  // State to handle collapsible
 	const [minHalOpp, setMinHalOpp] = useState<number>(0);  // State for the new input field
@@ -276,14 +324,22 @@ function App() {
 			let maxHalOppervlak_Beperkt_door_bouwvlak = bouwvlakArea - bebouwd_opp_kantoor;
 			let maxHalOppervlak_Beperkt_door_max_bebouwingsperc = (maxBebouwingspercentage - bebouwd_opp_kantoor / kavelArea) * kavelArea;
 			let maxHalOppervlak_Beperkt_door_totaal_benodigd_opp = kavelArea - bebouwd_opp_kantoor - opp_parkeren_kantoor + parkeernormHal / 100; // =('Kavel optimaliseren'!C6-B2-B4)/1+'Kavel optimaliseren'!C9/100 + 0.15247
-			const minValue = Math.min(maxHalOppervlak_Beperkt_door_bouwvlak, maxHalOppervlak_Beperkt_door_max_bebouwingsperc, maxHalOppervlak_Beperkt_door_totaal_benodigd_opp);
+			const minValue = Math.round(Math.min(maxHalOppervlak_Beperkt_door_bouwvlak, maxHalOppervlak_Beperkt_door_max_bebouwingsperc, maxHalOppervlak_Beperkt_door_totaal_benodigd_opp));
 			console.log(`minValue: ${maxHalOppervlak_Beperkt_door_bouwvlak }, ${maxHalOppervlak_Beperkt_door_max_bebouwingsperc}, ${maxHalOppervlak_Beperkt_door_totaal_benodigd_opp}`);
+			
+			// set the output values
 			setMaxHalOppervlak(minValue);
+			setBvoTotaal(minValue + oppervlakKantoor);
+			setBebouwdOpp(minValue + bebouwd_opp_kantoor);
+			setRestOpp(kavelArea - (minValue + bebouwd_opp_kantoor));
+			setBebouwingsgraad((minValue + bebouwd_opp_kantoor) / kavelArea);
+			setDocks(Math.round(minValue / 850));
 
-			parkeerplaatsBenodigdCalculation = minValue * parkeernormHal / 100 + aantal_benodigde_parkeerplaatsen;
+
+			parkeerplaatsBenodigdCalculation = Math.ceil(minValue * parkeernormHal / 100 + aantal_benodigde_parkeerplaatsen);
 			setParkeerplaatsBenodigd(parkeerplaatsBenodigdCalculation);
 		}
-		}, [parkeernormKantoor, oppervlakKantoor, halFunctie, kavelArea, bouwvlakArea, maxBebouwingspercentage, parkeernormHal, aantalBouwlagenKantoor]);
+		}, [kavelArea, bouwvlakArea, minBebouwingspercentage, maxBebouwingspercentage, parkeernormKantoor, parkeernormHal, oppervlakKantoor, aantalBouwlagenKantoor]);
 
 	
 	////////////////////////
@@ -508,6 +564,184 @@ function App() {
         }
     };
 
+	// Download handler function
+    const handleDownload = () => {
+        // Create a dummy JSON object
+        const data = { message: "This is a dummy JSON file." };
+
+        // Convert the data to a JSON string
+        const jsonString = JSON.stringify(data, null, 2); // Pretty-print with indentation
+
+        // Create a Blob from the JSON string
+        const blob = new Blob([jsonString], { type: 'application/json' });
+
+        // Create a URL for the Blob
+        const url = URL.createObjectURL(blob);
+
+        // Create a temporary <a> element
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'dummy.json';
+
+        // Append the link to the document body and trigger the click
+        document.body.appendChild(link);
+        link.click();
+
+        // Clean up by removing the link and revoking the object URL
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
+
+    // get hal from selection
+	useEffect(() => {
+		const button = document.getElementById('get_building_info_hal_btn');
+			if (button) {
+				// Add event listener for button clicks
+				button.addEventListener('click', async () => {
+					console.log(`get_building_info_hal_btn clicked`);
+
+					try {
+						// Fetch all paths to buildings in the current proposal.
+						const buildingPaths = await Forma.geometry.getPathsByCategory({ category: "buildings" })
+						console.log(`buildingPaths: ${buildingPaths}`);
+
+						// Fetch all paths to selected elements in the current proposal.
+						// Count how many of them are buildings.
+						const selectedPaths = await Forma.selection.getSelection()
+						// const buildingPaths2 = await Forma.geometry.getPathsByCategory({ category: "buildings" })
+						// console.log(`buildingPaths2: ${buildingPaths2}`);
+						const selectedBuildingPaths = selectedPaths.filter(path => buildingPaths.includes(path))
+						const numberOfSelectedBuildings = selectedBuildingPaths.length
+						console.log(`selectedBuildingPaths: ${selectedBuildingPaths}`);
+						console.log(`numberOfSelectedBuildings: ${numberOfSelectedBuildings}`);
+						console.log(`selectedPaths: ${selectedPaths}`);
+
+						// Use getByPath() to retrieve elements for the filtered paths
+						const elements = await Promise.all(
+							selectedPaths.map(async (path) => {
+								const { element, elements } = await Forma.elements.getByPath({ path });
+								return { element, elements };
+							})
+						);
+						console.log(`Retrieved elements:`, elements);
+
+						// Navigate the structure and access coordinates
+						// Initialize arrays to store x and y coordinates
+						const xCoordinates: number[] = [];
+						const yCoordinates: number[] = [];
+						const floors = elements[0].element.representations.__INTERNAL__.data.floors[0].graph.vertices;
+						// Loop through all vertices
+						for (const vertexId in floors) {
+							if (floors.hasOwnProperty(vertexId)) {
+								const vertex = floors[vertexId];
+								xCoordinates.push(vertex.x);
+								yCoordinates.push(vertex.y);
+							}
+						}
+						console.log('X Coordinates:', xCoordinates);
+						console.log('Y Coordinates:', yCoordinates);
+
+						// calculate the perimeter and area of the building
+						const { perimeter, area } = calculatePerimeterAndArea(xCoordinates, yCoordinates);
+						const height = elements[0].element.representations.__INTERNAL__.data.floors[0].height;
+						console.log(`Perimeter: ${perimeter}`);
+						console.log(`Area: ${area}`);
+						console.log(`Height: ${height}`);
+
+						// Update the state to display the calculated area in the UI
+						setGeselecteerd_hal(`${Math.round(perimeter)} m perimeter, ${Math.round(area)} m2 oppervlak, ${Math.round(height)} m hoogte`);
+					} catch (error) {
+						console.error(`Error fetching building info:`, error);
+					}
+				});
+			}
+		
+			return () => {
+			  if (button) {
+				button.removeEventListener('click', () => {});
+			  }
+			};
+		}, []);
+
+	// get kantoor from selection
+	useEffect(() => {
+		const button = document.getElementById('get_building_info_kan_btn');
+			if (button) {
+				// Add event listener for button clicks
+				button.addEventListener('click', async () => {
+					console.log(`get_building_info_kan_btn clicked`);
+
+					try {
+						// Fetch all paths to selected elements in the current proposal
+						const selectedPaths = await Forma.selection.getSelection();
+						console.log(`selectedPaths: ${selectedPaths}`);
+		
+						// Use getByPath() to retrieve elements for the filtered paths
+						const elements = await Promise.all(
+							selectedPaths.map(async (path) => {
+								const { element, elements } = await Forma.elements.getByPath({ path });
+								return { element, elements };
+							})
+						);
+						console.log(`Retrieved elements:`, elements);
+		
+						// Navigate the structure and access all floors
+						const floors = elements[0].element.representations.__INTERNAL__.data.floors;
+		
+						const floorMetrics = floors.map((floor: any, index: number) => {
+							const vertices = floor.graph.vertices;
+		
+							// Extract x and y coordinates of all vertices
+							const xCoordinates: number[] = [];
+							const yCoordinates: number[] = [];
+							for (const vertexId in vertices) {
+								if (vertices.hasOwnProperty(vertexId)) {
+									const vertex = vertices[vertexId];
+									xCoordinates.push(vertex.x);
+									yCoordinates.push(vertex.y);
+								}
+							}
+		
+							// Calculate the perimeter and area for the current floor
+							const { perimeter, area } = calculatePerimeterAndArea(xCoordinates, yCoordinates);
+							const height = floor.height || 'Height not defined';
+		
+							console.log(`Floor ${index}: Perimeter: ${perimeter}, Area: ${area}, Height: ${height}`);
+		
+							return { floorIndex: index, perimeter, area, height };
+						});
+		
+						console.log('Floor Metrics:', floorMetrics);
+		
+						// Optionally update the UI with aggregated or individual floor data
+						const totalArea = floorMetrics.reduce((sum, floor) => sum + floor.area, 0);
+						const totalPerimeter = floorMetrics.reduce((sum, floor) => sum + floor.perimeter, 0);
+						// Update the state to display the perimeter and area for each floor
+						const floorDetails = floorMetrics
+							.map(
+								(floor) =>
+									`Floor ${floor.floorIndex}: ${Math.round(floor.perimeter)} m perimeter, ${Math.round(floor.area)} m² oppervlak, ${Math.round(floor.height)} m hoogte`
+							)
+							.join('\n');
+
+						setGeselecteerd_kan(floorDetails);
+						// setGeselecteerd_kan(
+						// 	`Total: ${Math.round(totalPerimeter)} m perimeter, ${Math.round(totalArea)} m² oppervlak`
+						// );
+					} catch (error) {
+						console.error(`Error fetching building info:`, error);
+					}
+				});
+			}
+		
+			return () => {
+			  if (button) {
+				button.removeEventListener('click', () => {});
+			  }
+			};
+		}, []);
+
 
 
 
@@ -519,21 +753,21 @@ function App() {
 					Selecteer jouw kavel
 				</h3> */}
 				<h2 style={{marginBottom: '20px', marginTop: '0px' }}>
-					Tool 1: kavelscan
+					Kavelscan
 				</h2>
 
 				<button id="get_kavel_info_btn" class="selecteer_btn">
-					<b>Selecteer jouw kavel</b>
+					<b>Kavel selecteren / tekenen</b>
 					</button>
 				<p class="text_showing_info_of_selected" >
-					Kavel oppervlak [m2]: {kavelArea !== null ? kavelArea : " --"}
+					Geselecteerd oppervlak [m2]: {kavelArea !== null ? kavelArea : " --"}
 				</p>
 
 				<button id="get_bouwvlak_info_btn" class="selecteer_btn">
-					<b>Selecteer jouw bouwvlak</b>
+					<b>Bouwvlak selecteren / tekenen</b>
 					</button>
 				<p class="text_showing_info_of_selected">
-					Bouwvlak oppervlak [m2]: {bouwvlakArea !== null ? bouwvlakArea : " --"}
+					Geselecteerd oppervlak [m2]: {bouwvlakArea !== null ? bouwvlakArea : " --"}
 				</p>
 
 
@@ -557,7 +791,7 @@ function App() {
 							type="number"
 							step="0.01"
 							value={minBebouwingspercentage}
-							onChange={(e) => setMinBebouwingspercentage(parseInt((e.target as HTMLInputElement).value))}
+							onChange={(e) => setMinBebouwingspercentage(parseFloat((e.target as HTMLInputElement).value))}
 							style={{ width: '100px', textAlign: 'right', margin: '10px' }}
 						/>
 					</div>
@@ -569,14 +803,14 @@ function App() {
 							type="number"
 							step="0.01"
 							value={maxBebouwingspercentage}
-							onChange={(e) => setMaxBebouwingspercentage(parseInt((e.target as HTMLInputElement).value))}
+							onChange={(e) => setMaxBebouwingspercentage(parseFloat((e.target as HTMLInputElement).value))}
 							style={{ width: '100px', textAlign: 'right', margin: '10px' }}
 						/>
 					</div>
 
 					<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
 						<label style={{ width: '250px', marginRight: '20px' }}>
-						Parkeernorm kantoor (double):
+						Parkeernorm kantoor:
 						</label>
 						<input
 							type="number"
@@ -588,7 +822,7 @@ function App() {
 					</div>
 					<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
 						<label style={{ width: '250px', marginRight: '20px' }}>
-						Parkeernorm hal (double):
+						Parkeernorm hal:
 						</label>
 						<input
 							type="number"
@@ -623,7 +857,7 @@ function App() {
 						<input
 							type="number"
 							value={aantalBouwlagenKantoor}
-							onChange={(e) => setOppervlakKantoor(parseInt((e.target as HTMLInputElement).value))}
+							onChange={(e) => setaantalBouwlagenKantoor(parseInt((e.target as HTMLInputElement).value))}
 							style={{ width: '100px', textAlign: 'right', margin: '10px' }}
 						/>
 					</div>
@@ -650,8 +884,15 @@ function App() {
 
 				<div  style={{ backgroundColor: '#e0ebf9', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '10px', margin: '0',  }}>	
 				
-					<p>Parkeerplaats benodigd: {parkeerplaatsBenodigd}</p>
-					<p><b>Max. hal oppervlak [m2]: {maxHalOppervlak !== null ? maxHalOppervlak : "--"}</b></p>
+					
+					<p style={{marginBottom: '0px'}}><b>BVO hal: {maxHalOppervlak !== null ? maxHalOppervlak : "--"}</b></p>
+					<p style={{marginBottom: '0px'}}>BVO kantoor: {oppervlakKantoor}</p>
+					<p>BVO totaal: {bvoTotaal !== null ? bvoTotaal : "--"}</p>
+					<p style={{marginBottom: '0px'}}>Bebouwd oppervlak: {bebouwdOpp !== null ? bebouwdOpp : "--"}</p>
+					<p style={{marginBottom: '0px'}}>Rest oppervlak: {restOpp !== null ? restOpp : "--"}</p>
+					<p>Bebouwingsgraad: {bebouwingsgraad !== null ? bebouwingsgraad : "--"}</p>
+					<p style={{marginBottom: '0px'}}>Docks: {docks !== null ? docks : "--"}</p>
+					<p style={{marginBottom: '0px'}}>Parkeerplaatsen benodigd: {}</p>
 				
 				</div>
 
@@ -753,7 +994,7 @@ function App() {
 						Vul hier meer klantwensen in
 					</div>
 					{/* Collapsible Content */}
-					{isCollapsibleOpen && (
+					{/* {isCollapsibleOpen && (
 						<div style={{ padding: '10px', backgroundColor: '#f9f9f9', marginTop: '10px', borderRadius: '4px' }}>
 						<label>
 							Jouw gewenste min. hal opp.:
@@ -765,7 +1006,7 @@ function App() {
 							/>
 						</label>
 						</div>
-					)}
+					)} */}
 				</div>
 				{/* end of Collapsible Section for klantwensen before generating opties*/}
 
@@ -777,14 +1018,87 @@ function App() {
 				<br></br>
 				<div>
 					<p><b>Details van deze optie: </b></p>
-					<p>Parkeerplaats benodigd: {parkeerplaatsBenodigd}</p>
-					<p>Hal oppervlak [m2]: {maxHalOppervlak !== null ? maxHalOppervlak : "--"}</p>
+					{/* <p>Parkeerplaats benodigd: {parkeerplaatsBenodigd}</p> */}
+					{/* <p>Hal oppervlak [m2]: {maxHalOppervlak !== null ? maxHalOppervlak : "--"}</p> */}
 					<p>Kantoor oppervlak: 10000 m2</p>
 					<p>Bebouwingspercentage: 60%</p>
 				</div>
 
 				
 
+
+				
+				<br></br>
+				<br></br>
+				<br></br>
+				<br></br>
+
+				<h2 style={{marginBottom: '0px' }}>
+					Tool 3: Ontwerp downloaden, als input voor configurator
+				</h2>
+				<h3 style={{textAlign: 'left'}}>1. <br></br> Klik op jouw hal in 3D view, en dan bevestig</h3>
+				<button id="get_building_info_hal_btn" class="selecteer_btn">
+					<b>Bevestig hal selectie</b>
+					</button>
+				<p class="text_showing_info_of_selected"  >
+					{geselecteerd_hal !== null ? geselecteerd_hal : " --"} geselecteerd
+				</p>
+				<h3 style={{textAlign: 'left'}}>2. <br></br> Klik op jouw kantoor in 3D view, en dan bevestig</h3>
+				<button id="get_building_info_kan_btn" class="selecteer_btn">
+					<b>Bevestig kantoor selectie</b>
+					</button>
+				<p class="text_showing_info_of_selected" >
+					{geselecteerd_kan !== null ? geselecteerd_kan : " --"} geselecteerd
+				</p>
+				<h3 style={{textAlign: 'left'}}>3. <br></br> Vul meer informatie in</h3>
+				
+				
+				<div  style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '0', margin: '0', border: '1px solid' }}>
+
+					<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%',  }}>
+						<label style={{ width: '250px', marginRight: '20px' }}>
+						Aantal docks:
+						</label>
+						<input
+							type="number"
+							step="1"
+							value={dockAantalForExport}
+							onChange={(e) => setDockAantalForExport(parseInt((e.target as HTMLInputElement).value))}
+							style={{ width: '100px', textAlign: 'right', margin: '10px' }}
+						/>
+					</div>
+					<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%',  }}>
+						<label style={{ width: '250px', marginRight: '20px' }}>
+						Hal-kantoor overlap lengte [m]:
+						</label>
+						<input
+							type="number"
+							step="1"
+							value={halKanOverlapLength}
+							onChange={(e) => setHalKanOverlapLength(parseInt((e.target as HTMLInputElement).value))}
+							style={{ width: '100px', textAlign: 'right', margin: '10px' }}
+						/>
+					</div>
+					<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%',  }}>
+						<label style={{ width: '250px', marginRight: '20px' }}>
+						Hal totaal compartementering lengte [m]:
+						</label>
+						<input
+							type="number"
+							step="1"
+							value={halCompartLength}
+							onChange={(e) => setHalCompartLength(parseInt((e.target as HTMLInputElement).value))}
+							style={{ width: '100px', textAlign: 'right', margin: '10px' }}
+						/>
+					</div>
+				</div>
+				<br></br>
+				<h3 style={{textAlign: 'left'}}>4. <br></br> Download jouw ontwerp</h3>
+				<button onClick={handleDownload} class="selecteer_btn">
+					Download 
+				</button>
+				<br></br>
+				<h3>Die bestand kun je naar de Configurator uploaden en ermee calculeren.</h3>
 
 				
 
