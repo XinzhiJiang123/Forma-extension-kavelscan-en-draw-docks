@@ -132,6 +132,7 @@ function App() {
 	const [dockAantalForExport, setDockAantalForExport] = useState<number | null>(10);
 	const [halKanOverlapLength, setHalKanOverlapLength] = useState<number | null>(40);
 	const [halCompartLength, setHalCompartLength] = useState<number | null>(300);
+	const [mezOpp, setMezOpp] = useState<number>(0);
 
 
 	const [isCollapsibleOpen, setIsCollapsibleOpen] = useState<boolean>(false);  // State to handle collapsible
@@ -148,7 +149,68 @@ function App() {
 	const [dockLine_endY, setDockLine_endY] = useState<number | null>(null);
 	const [dockLine_endZ, setDockLine_endZ] = useState<number | null>(null);
 	const [dockAantal, setDockAantal] = useState<number | null>(null);
-	
+
+	// so that values of elements selected can be stored and exported to json
+	const [buildingData_hal, setBuildingData_hal] = useState<{ 
+		a_bvo_hal: number; 
+		l_perim_hal_total: number;
+		a_facade_hal: number;  
+		a_hal_gevel: number; 
+		c_hal_z: number;
+	}>({
+		a_bvo_hal: 0,
+		l_perim_hal_total: 0,
+		a_facade_hal: 0,
+		a_hal_gevel: 0,
+		c_hal_z: 0,
+	  });
+	const [buildingData_kan, setBuildingData_kan] = useState<{ 
+		a_kan_1floor: number; nfloor_kan: number; l_perim_kan_total: number; 
+		a_bvo_kan: number; 
+		a_facade_kan: number;  
+		a_kan_gevel: number; 
+		c_kan1_z: number;
+	}>({a_kan_1floor: 0, nfloor_kan: 0, l_perim_kan_total: 0,
+		a_bvo_kan: 0,
+		a_facade_kan: 0,  
+		a_kan_gevel: 0, 
+		c_kan1_z: 0,
+	});
+	// // [a_bvo, a_bvo_hal, a_hal_mez, a_kan_1floor, nfloor_kan, a_bvo_kan, a_total_for_fund]
+	const [a_bvo_list, set_a_bvo_list] = useState<{
+		 a_bvo: number; a_bvo_hal: number; 
+		 a_hal_mez: number; a_kan_1floor: number; 
+		 nfloor_kan: number; a_bvo_kan: number;
+		 a_total_for_fund: number;
+		} | null>(null);
+	// set_a_bvo_list({ a_bvo_hal: Math.round(area), perimeter: Math.round(perimeter) });
+	// //[a_dak_hal, a_dak_kan] = a_dak
+	const [a_dak, set_a_dak] = useState<{
+		a_dak_hal: number; a_dak_kan: number; 
+	   } | null>(null);
+	// set_a_dak({ a_bvo_hal: Math.round(area), perimeter: Math.round(perimeter) });
+	// // [l_perim_hal_total, l_perim_kan_total, l_perim_halkan_overlap, a_facade_hal, a_facade_kan, a_hal_gevel, a_kan_gevel] = a_gevel
+	const [a_gevel, set_a_gevel] = useState<{
+		l_perim_hal_total: number; l_perim_kan_total: number; 
+		l_perim_halkan_overlap: number; 
+		a_facade_hal: number; 
+		a_facade_kan: number; 
+		a_hal_gevel: number;
+		a_kan_gevel: number;
+	   } | null>(null);
+	// set_a_gevel({ a_bvo_hal: Math.round(area), perimeter: Math.round(perimeter) });
+	// // ...
+	// set_l_perim_kavel({ a_bvo_hal: Math.round(area), perimeter: Math.round(perimeter) });
+	// set_c_hal_z({ c_hal_z: Math.round(height * 100) / 100 });  // round to 2 decimals
+	const [c_hal_z, set_c_hal_z] = useState<{
+		c_hal_z: number;
+	   } | null>(null);
+	const [c_kan1_z, set_c_kan1_z] = useState<{
+		c_kan1_z: number;
+	   } | null>(null);
+
+
+
 
 	const toggleCollapsible = () => {
 		setIsCollapsibleOpen(!isCollapsibleOpen);
@@ -564,10 +626,86 @@ function App() {
         }
     };
 
+
+
 	// Download handler function
     const handleDownload = () => {
         // Create a dummy JSON object
-        const data = { message: "This is a dummy JSON file." };
+        // const data = { message: "This is a dummy JSON file." };
+		// Create the JSON object with the calculated data
+		// [a_bvo, a_bvo_hal, a_hal_mez, a_kan_1floor, nfloor_kan, a_bvo_kan, a_total_for_fund]
+        const data = {
+            name: "interpolator",
+            PvE: [
+                {
+                    name: "a_bvo_list",
+                    value: [
+						// +mez
+						buildingData_hal && buildingData_kan ? buildingData_hal.a_bvo_hal + buildingData_kan.a_bvo_kan + mezOpp: "No combined data",
+						buildingData_hal ? buildingData_hal.a_bvo_hal : "No hal data",
+						mezOpp !== null && mezOpp !== undefined ? mezOpp : 0,
+						buildingData_kan ? buildingData_kan.a_kan_1floor : 0,
+						buildingData_kan ? buildingData_kan.nfloor_kan : 0,
+						buildingData_kan ? buildingData_kan.a_bvo_kan : 0,
+						buildingData_hal && buildingData_kan ? buildingData_hal.a_bvo_hal + buildingData_kan.a_kan_1floor : "No combined data",
+					],
+                },
+				{
+                    name: "a_dak",
+                    value: [
+						buildingData_hal ? buildingData_hal.a_bvo_hal : "No hal data",
+						buildingData_kan ? buildingData_kan.a_kan_1floor : "No kan data",
+					],
+                },
+				// [l_perim_hal_total, l_perim_kan_total, l_perim_halkan_overlap, a_facade_hal, a_facade_kan, a_hal_gevel, a_kan_gevel] = a_gevel
+				{
+                    name: "a_gevel",
+                    value: [
+						buildingData_hal ? buildingData_hal.l_perim_hal_total : "No hal data",
+						buildingData_kan ? buildingData_kan.l_perim_kan_total : "No kan data",
+						// l_perim_halkan_overlap
+						buildingData_hal ? buildingData_hal.a_facade_hal : "No hal data",
+						buildingData_kan ? buildingData_kan.a_facade_kan : "No kan data",
+						buildingData_hal ? buildingData_hal.a_hal_gevel : "No hal data",
+						buildingData_kan ? buildingData_kan.a_kan_gevel : "No kan data",
+					],
+                },
+				{
+                    name: "ndock",
+                    value: 
+					dockAantalForExport !== null && dockAantalForExport !== undefined ? dockAantalForExport : 0,
+                },
+				{
+                    name: "a_laadkuil",
+                    value: 
+						dockAantalForExport !== null && dockAantalForExport !== undefined ? dockAantalForExport * 4.8 * 27 : 0,
+                },
+				{
+                    name: "a_terrein",
+                    value: 
+					dockAantalForExport !== null && dockAantalForExport !== undefined ? buildingData_hal.a_bvo_hal + buildingData_kan.a_bvo_kan + dockAantalForExport * 4.8 * 27 : buildingData_hal.a_bvo_hal + buildingData_kan.a_bvo_kan,
+                },
+				{
+                    name: "l_perim_kavel",
+                    value: 
+					dockAantalForExport !== null && dockAantalForExport !== undefined ? 
+					Math.sqrt((buildingData_hal.a_bvo_hal + buildingData_kan.a_bvo_kan + dockAantalForExport * 4.8 * 27) / 6) * 10 : Math.sqrt((buildingData_hal.a_bvo_hal + buildingData_kan.a_bvo_kan) / 6) * 10,
+                },
+				{
+                    name: "c_hal_z",
+                    value: 
+					buildingData_hal ? buildingData_hal.c_hal_z : "No hal data",
+				},
+				{
+                    name: "c_kan1_z",
+                    value: 
+					buildingData_kan ? buildingData_kan.c_kan1_z : "No kan data",
+				},
+            ],
+        };
+
+		// const a_bvo = 
+		// const a_bvo_list = [a_bvo, a_bvo_hal, a_hal_mez, a_kan_1floor, nfloor_kan, a_bvo_kan, a_total_for_fund];
 
         // Convert the data to a JSON string
         const jsonString = JSON.stringify(data, null, 2); // Pretty-print with indentation
@@ -651,6 +789,19 @@ function App() {
 
 						// Update the state to display the calculated area in the UI
 						setGeselecteerd_hal(`${Math.round(perimeter)} m perimeter, ${Math.round(area)} m2 oppervlak, ${Math.round(height)} m hoogte`);
+						// [a_bvo, a_bvo_hal, a_hal_mez, a_kan_1floor, nfloor_kan, a_bvo_kan, a_total_for_fund]
+						// const [buildingData_hal, setBuildingData_hal] = useState<{ 
+						// 	a_bvo: number; l_perim_hal_total: number;
+						// 	a_facade_hal: number;  
+						// 	a_hal_gevel: number; 
+						// 	c_hal_z: number;
+						// } | null>(null);
+						setBuildingData_hal({ 
+							a_bvo_hal: Math.round(area), l_perim_hal_total: Math.round(perimeter),
+							a_facade_hal: Math.round(perimeter * height),
+							a_hal_gevel: Math.round(perimeter * height),
+							c_hal_z: Math.round(height * 100) / 100, 
+						});
 					} catch (error) {
 						console.error(`Error fetching building info:`, error);
 					}
@@ -688,6 +839,8 @@ function App() {
 		
 						// Navigate the structure and access all floors
 						const floors = elements[0].element.representations.__INTERNAL__.data.floors;
+
+						const height_total = 0;
 		
 						const floorMetrics = floors.map((floor: any, index: number) => {
 							const vertices = floor.graph.vertices;
@@ -717,6 +870,7 @@ function App() {
 						// Optionally update the UI with aggregated or individual floor data
 						const totalArea = floorMetrics.reduce((sum, floor) => sum + floor.area, 0);
 						const totalPerimeter = floorMetrics.reduce((sum, floor) => sum + floor.perimeter, 0);
+						const totalHeight = floorMetrics.reduce((sum, floor) => sum + floor.height, 0);
 						// Update the state to display the perimeter and area for each floor
 						const floorDetails = floorMetrics
 							.map(
@@ -726,9 +880,19 @@ function App() {
 							.join('\n');
 
 						setGeselecteerd_kan(floorDetails);
-						// setGeselecteerd_kan(
-						// 	`Total: ${Math.round(totalPerimeter)} m perimeter, ${Math.round(totalArea)} m² oppervlak`
-						// );
+						// 				a_kan_1floor: number; nfloor_kan: number; l_perim_kan_total: number; 
+						// a_bvo_kan: number; 
+						// a_facade_kan: number;  
+						// a_kan_gevel: number; 
+						// c_kan1_z: number;
+						setBuildingData_kan({ 
+							a_kan_1floor: Math.round(totalArea / floorMetrics.length), nfloor_kan: floorMetrics.length,
+							l_perim_kan_total: Math.round(totalPerimeter / floorMetrics.length),
+							a_bvo_kan: Math.round(totalArea),
+							a_facade_kan: Math.round(totalPerimeter / floorMetrics.length * totalHeight),
+							a_kan_gevel: Math.round(totalPerimeter / floorMetrics.length * totalHeight), 
+							c_kan1_z: totalHeight,
+						});
 					} catch (error) {
 						console.error(`Error fetching building info:`, error);
 					}
@@ -1024,8 +1188,6 @@ function App() {
 					<p>Bebouwingspercentage: 60%</p>
 				</div>
 
-		    		<button onClick={handleDownload}>Download dummy building test</button>
-
 				
 
 
@@ -1038,6 +1200,11 @@ function App() {
 				<h2 style={{marginBottom: '0px' }}>
 					Tool 3: Ontwerp downloaden, als input voor configurator
 				</h2>
+				<p style={{textAlign: 'left'}}>
+					<br></br> 
+					1. Max. één hal en max. één kantoor; <br></br> 
+					2. Alleen buiten kantoor.
+				</p>
 				<h3 style={{textAlign: 'left'}}>1. <br></br> Klik op jouw hal in 3D view, en dan bevestig</h3>
 				<button id="get_building_info_hal_btn" class="selecteer_btn">
 					<b>Bevestig hal selectie</b>
@@ -1090,6 +1257,18 @@ function App() {
 							step="1"
 							value={halCompartLength}
 							onChange={(e) => setHalCompartLength(parseInt((e.target as HTMLInputElement).value))}
+							style={{ width: '100px', textAlign: 'right', margin: '10px' }}
+						/>
+					</div>
+					<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%',  }}>
+						<label style={{ width: '250px', marginRight: '20px' }}>
+							Mezzanine oppervlak [m2]:
+						</label>
+						<input
+							type="number"
+							step="1"
+							value={mezOpp}
+							onChange={(e) => setMezOpp(parseInt((e.target as HTMLInputElement).value))}
 							style={{ width: '100px', textAlign: 'right', margin: '10px' }}
 						/>
 					</div>
