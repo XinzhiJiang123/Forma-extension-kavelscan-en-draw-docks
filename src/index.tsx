@@ -1024,6 +1024,8 @@ function App() {
 					<p>Bebouwingspercentage: 60%</p>
 				</div>
 
+		    		<button onClick={handleDownload}>Download dummy building test</button>
+
 				
 
 
