@@ -1317,8 +1317,7 @@ function App() {
 				<br></br>
 				<p>Total number of buildings: {buildingPaths?.length}</p>
 				<br></br>
-				<br></br>
-            </div>
+            </div> 
         </>
     );
 }
