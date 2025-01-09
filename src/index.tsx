@@ -132,7 +132,7 @@ function App() {
 	const [dockAantalForExport, setDockAantalForExport] = useState<number | null>(10);
 	const [halKanOverlapLength, setHalKanOverlapLength] = useState<number | null>(40);
 	const [halCompartLength, setHalCompartLength] = useState<number | null>(300);
-	const [mezOpp, setMezOpp] = useState<number>(0);
+	const [mezOpp, setMezOpp] = useState<number | null>(0);
 
 
 	const [isCollapsibleOpen, setIsCollapsibleOpen] = useState<boolean>(false);  // State to handle collapsible
@@ -641,9 +641,14 @@ function App() {
                     name: "a_bvo_list",
                     value: [
 						// +mez
-						buildingData_hal && buildingData_kan ? buildingData_hal.a_bvo_hal + buildingData_kan.a_bvo_kan + mezOpp: "No combined data",
+						!buildingData_hal && !buildingData_kan && mezOpp == null
+							? "No combined data"
+							: (buildingData_hal?.a_bvo_hal ?? 0)
+							+ (buildingData_kan?.a_bvo_kan ?? 0)
+							+ (mezOpp ?? 0),
 						buildingData_hal ? buildingData_hal.a_bvo_hal : "No hal data",
-						mezOpp !== null && mezOpp !== undefined ? mezOpp : 0,
+						mezOpp ?? 0,
+						// mezOpp !== null && mezOpp !== undefined ? mezOpp : 0,
 						buildingData_kan ? buildingData_kan.a_kan_1floor : 0,
 						buildingData_kan ? buildingData_kan.nfloor_kan : 0,
 						buildingData_kan ? buildingData_kan.a_bvo_kan : 0,
@@ -664,10 +669,13 @@ function App() {
 						buildingData_hal ? buildingData_hal.l_perim_hal_total : "No hal data",
 						buildingData_kan ? buildingData_kan.l_perim_kan_total : "No kan data",
 						// l_perim_halkan_overlap
-						buildingData_hal ? buildingData_hal.a_facade_hal : "No hal data",
-						buildingData_kan ? buildingData_kan.a_facade_kan : "No kan data",
-						buildingData_hal ? buildingData_hal.a_hal_gevel : "No hal data",
-						buildingData_kan ? buildingData_kan.a_kan_gevel : "No kan data",
+						halKanOverlapLength !== null && halKanOverlapLength !== undefined ? halKanOverlapLength : 0,
+						// a_facade_hal 
+						halKanOverlapLength !== null && halKanOverlapLength !== undefined ? buildingData_hal.l_perim_hal_total * buildingData_hal.c_hal_z - 
+						halKanOverlapLength * Math.min(buildingData_kan.c_kan1_z, buildingData_hal.c_hal_z) : "No overlap data",
+						// a_gevel_kan
+						buildingData_kan && halKanOverlapLength !== null && halKanOverlapLength !== undefined ? buildingData_kan.a_kan_gevel - 
+						halKanOverlapLength * Math.min(buildingData_kan.c_kan1_z, buildingData_hal.c_hal_z) : "No kan data",
 					],
                 },
 				{
@@ -701,6 +709,10 @@ function App() {
                     value: 
 					buildingData_kan ? buildingData_kan.c_kan1_z : "No kan data",
 				},
+				{
+					name: "in_hal_compart_length_num",
+					value: halCompartLength !== null && halCompartLength !== undefined ? halCompartLength : 0,
+				}
             ],
         };
 
@@ -1243,8 +1255,15 @@ function App() {
 						<input
 							type="number"
 							step="1"
-							value={halKanOverlapLength}
-							onChange={(e) => setHalKanOverlapLength(parseInt((e.target as HTMLInputElement).value))}
+							// value={halKanOverlapLength}
+							// onChange={(e) => setHalKanOverlapLength(parseInt((e.target as HTMLInputElement).value))}
+							value={halKanOverlapLength ?? 0}
+							onChange={(e) => {
+								const value = (e.target as HTMLInputElement).value;
+								// Fallback to 0 if empty or if parseInt is NaN
+								const parsedValue = value === '' ? 0 : parseInt(value, 10);
+								setHalKanOverlapLength(isNaN(parsedValue) ? 0 : parsedValue);
+							}}
 							style={{ width: '100px', textAlign: 'right', margin: '10px' }}
 						/>
 					</div>
@@ -1267,8 +1286,15 @@ function App() {
 						<input
 							type="number"
 							step="1"
-							value={mezOpp}
-							onChange={(e) => setMezOpp(parseInt((e.target as HTMLInputElement).value))}
+							value={mezOpp ?? 0}
+							onChange={(e) => {
+								const value = (e.target as HTMLInputElement).value;
+								// Fallback to 0 if empty or if parseInt is NaN
+								const parsedValue = value === '' ? 0 : parseInt(value, 10);
+								setMezOpp(isNaN(parsedValue) ? 0 : parsedValue);
+							}}
+							// value={mezOpp}
+							// onChange={(e) => setMezOpp(parseInt((e.target as HTMLInputElement).value))}
 							style={{ width: '100px', textAlign: 'right', margin: '10px' }}
 						/>
 					</div>
