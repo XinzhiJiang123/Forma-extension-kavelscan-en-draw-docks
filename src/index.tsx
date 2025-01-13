@@ -712,7 +712,12 @@ function App() {
 				{
 					name: "in_hal_compart_length_num",
 					value: halCompartLength !== null && halCompartLength !== undefined ? halCompartLength : 0,
-				}
+				},
+				{
+					name: "a_kan_compart",  // for buiten kan
+					value: buildingData_kan && halKanOverlapLength !== null && halKanOverlapLength !== undefined ? 
+					halKanOverlapLength * Math.min(buildingData_kan.c_kan1_z, buildingData_hal.c_hal_z) : "No kan data",
+				},
             ],
         };
 
@@ -963,8 +968,15 @@ function App() {
 						<input
 							type="number"
 							step="1"
-							value={dockAantalForExport}
-							onChange={(e) => setDockAantalForExport(parseInt((e.target as HTMLInputElement).value))}
+							// value={dockAantalForExport}
+							// onChange={(e) => setDockAantalForExport(parseInt((e.target as HTMLInputElement).value))}
+							value={dockAantalForExport ?? 0}
+							onChange={(e) => {
+								const value = (e.target as HTMLInputElement).value;
+								// Fallback to 0 if empty or if parseInt is NaN
+								const parsedValue = value === '' ? 0 : parseInt(value, 10);
+								setDockAantalForExport(isNaN(parsedValue) ? 0 : parsedValue);
+							}}
 							style={{ width: '100px', textAlign: 'right', margin: '10px' }}
 						/>
 					</div>
@@ -994,8 +1006,15 @@ function App() {
 						<input
 							type="number"
 							step="1"
-							value={halCompartLength}
-							onChange={(e) => setHalCompartLength(parseInt((e.target as HTMLInputElement).value))}
+							// value={halCompartLength}
+							// onChange={(e) => setHalCompartLength(parseInt((e.target as HTMLInputElement).value))}
+							value={halCompartLength ?? 0}
+							onChange={(e) => {
+								const value = (e.target as HTMLInputElement).value;
+								// Fallback to 0 if empty or if parseInt is NaN
+								const parsedValue = value === '' ? 0 : parseInt(value, 10);
+								setHalCompartLength(isNaN(parsedValue) ? 0 : parsedValue);
+							}}
 							style={{ width: '100px', textAlign: 'right', margin: '10px' }}
 						/>
 					</div>
