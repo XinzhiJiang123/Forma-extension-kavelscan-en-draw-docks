@@ -705,7 +705,7 @@ function App() {
 					buildingData_hal ? buildingData_hal.c_hal_z : "No hal data",
 				},
 				{
-                    name: "c_kan1_z",
+                    name: "c_kan_z",
                     value: 
 					buildingData_kan ? buildingData_kan.c_kan1_z : "No kan data",
 				},
