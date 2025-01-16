@@ -736,7 +736,7 @@ function App() {
         // Create a temporary <a> element
         const link = document.createElement('a');
         link.href = url;
-        link.download = 'dummy.json';
+        link.download = 'Config_input_vanuit_forma.json';
 
         // Append the link to the document body and trigger the click
         document.body.appendChild(link);
