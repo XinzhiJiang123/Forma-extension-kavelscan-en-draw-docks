@@ -935,21 +935,19 @@ function App() {
 				<h2 style={{marginBottom: '0px' }}>
 					Ontwerp downloaden, als input voor configurator
 				</h2>
-				<h4>Met deze tool kunt u een bestand downloaden met de door je geselecteerde: <br></br><br></br>1. Max. één bedrijfshal, en/of <br></br>2. Max. één buiten kantoor.</h4>
+				<h4>Met deze tool kunt u een bestand downloaden met de door jou geselecteerde: <br></br><br></br>1. Max. één bedrijfshal, en/of <br></br>2. Max. één uitpandig kantoor.</h4>
 				<h4>Dan kun je het bestand uploaden naar de configurator.</h4>
 				<p style={{textAlign: 'left'}}>
-					<br></br> 
-					1. Max. één hal en max. één kantoor; <br></br> 
-					2. Alleen buiten kantoor.
+					Gebruik 'Basic building' (toetsenbord shortcut 'B') om je massa's te creeren.
 				</p>
-				<h3 style={{textAlign: 'left'}}>1. <br></br> Klik op jouw hal in 3D view, en dan bevestig</h3>
+				<h3 style={{textAlign: 'left'}}>1. <br></br> Klik op jouw hal in 3D view, en bevestig dan</h3>
 				<button id="get_building_info_hal_btn" class="selecteer_btn">
 					<b>Bevestig hal selectie</b>
 					</button>
 				<p class="text_showing_info_of_selected"  >
 					{geselecteerd_hal !== null ? geselecteerd_hal : " --"} geselecteerd
 				</p>
-				<h3 style={{textAlign: 'left'}}>2. <br></br> Klik op jouw kantoor in 3D view, en dan bevestig</h3>
+				<h3 style={{textAlign: 'left'}}>2. <br></br> Klik op jouw kantoor in 3D view, en bevestig dan</h3>
 				<button id="get_building_info_kan_btn" class="selecteer_btn">
 					<b>Bevestig kantoor selectie</b>
 					</button>
@@ -1044,7 +1042,7 @@ function App() {
 					Download 
 				</button>
 				<br></br>
-				<h4>Die bestand kun je naar de Configurator uploaden (onder "Ontwerp importeren") en ermee calculeren.</h4>
+				<h4>Dit bestand kun je naar de Configurator uploaden (onder "Ontwerp importeren") en ermee calculeren.</h4>
 
 				
 
